@@ -14,6 +14,6 @@ var NgoSchema = new mongoose.Schema({
 	]
 });
 
-UserSchema.plugin(passportLocalMongoose);
+NgoSchema.plugin(passportLocalMongoose);
 
 module.exports =mongoose.model("Ngo",NgoSchema);

@@ -9,7 +9,7 @@ var methodOverride = require("method-override");
 // var Club=require("./models/club");
 // var Post=require("./models/post");
 // var Comment =require("./models/comment");
-// var User =require("./models/user");
+var Ngo =require("./models/Ngo");
 // var seedDB = require("./seed");
 app.set("view engine","ejs");
 app.use(express.static(__dirname + '/public'));
