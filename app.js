@@ -6,10 +6,8 @@ var flash=require("connect-flash");
 var passport =require("passport");
 var LocalStrategy=require("passport-local");
 var methodOverride = require("method-override");
-// var Club=require("./models/club");
-// var Post=require("./models/post");
-// var Comment =require("./models/comment");
 var Ngo =require("./models/Ngo");
+var User =require("./models/User")
 // var seedDB = require("./seed");
 app.set("view engine","ejs");
 app.use(express.static(__dirname + '/public'));
@@ -17,28 +15,36 @@ app.use(express.static(__dirname + '/public'));
 // seedDB();
 mongoose.set('useNewUrlParser', true);
 mongoose.set('useUnifiedTopology', true);
-mongoose.connect("mongodb://localhost/nitshacks");
+mongoose.connect("mongodb://localhost/nitshacks3");
 app.use(bodyParser.urlencoded({extended:true}));
 
-// app.use(passport.initialize());
-// app.use(passport.session());
-// passport.use(new LocalStrategy(User.authenticate()));
-// passport.serializeUser(User.serializeUser());
-// passport.deserializeUser(User.deserializeUser());
-// app.use(function(req,res,next){
-// 	res.locals.currentUser=req.user;
-// 	// res.locals.error=req.flash("error");
-// 	// res.locals.success=req.flash("success");
-// 	next();
-// });
+app.use(passport.initialize());
+app.use(passport.session());
+passport.use('user',new LocalStrategy(User.authenticate()));
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
+passport.use('ngo',new LocalStrategy(Ngo.authenticate()));
+passport.serializeUser(Ngo.serializeUser());
+passport.deserializeUser(Ngo.deserializeUser());
+
+
+app.use(function(req,res,next){
+	res.locals.currentUser=req.user;
+	// res.locals.error=req.flash("error");
+	// res.locals.success=req.flash("success");
+	next();
+});
 
 //routes
 
+//home
 app.get('/',function(req,res){
 	res.render('index');
 });
+
+//landing page showing ngos based on categories
 app.get('/ngos/:ngoType',function(req,res){
-	var ngos=Ngo.find({},function(err,allngos){
+	var ngos=Ngo.find({type:req.params.ngoType},function(err,allngos){
 		if(err){
 			console.log(err);
 		}else{
@@ -47,6 +53,65 @@ app.get('/ngos/:ngoType',function(req,res){
 	});
 })
 
+//signup page
+app.get('/signup',function(req,res){
+	res.render('register_ngo');
+});
+//adding ngo to database using data from signup page
+app.post('/ngos/add',function(req,res){
+	ngo=new Ngo({
+		username: req.body.username,
+		email: req.body.email,
+		type:req.body.ngoType,
+		description: req.body.description,
+		usertype: 'ngo'
+	});
+	Ngo.register(ngo,req.body.password,function(err,ngo){
+		if(err){
+			console.log(err);
+			return res.render("index");
+		}
+		passport.authenticate("ngo")(req,res,function(){
+			res.redirect('/');
+		});
+	});
+	// await ngo.save();
+	// res.render('/ngos'+ngo.type+'/'+ngo._id);
+});
+
+//employee signup
+
+app.get('/admin/signup',function(req,res){
+	res.render('register_employee');
+});
+
+app.post("/admin/signup",function(req,res){
+	var newUser=new User({username:req.body.username,email:req.body.email,usertype:'employee'});
+	User.register(newUser,req.body.password,function(err,user){
+		if(err){
+			res.redirect("/admin/signup");
+		}
+		passport.authenticate("user")(req,res,function(){
+			res.redirect("/");
+		});
+	});
+});
+
+//login
+
+app.get("/login",function(req,res){
+	res.render("login");
+});
+app.post("/login/user",passport.authenticate("user",{
+	successRedirect: "/",
+	failureRedirect: "/login"
+}),function(req,res){
+});
+app.post("/login/ngo",passport.authenticate("ngo",{
+	successRedirect: "/ngos/health",
+	failureRedirect: "/login"
+}),function(req,res){
+});
 
 app.listen(4000,function(){
 	console.log("Server has been Started");

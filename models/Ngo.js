@@ -5,6 +5,7 @@ var NgoSchema = new mongoose.Schema({
 	email: String,
 	type:String,
 	password: String,
+	usertype:String,
 	description:String,
 	projects:[
 		{
