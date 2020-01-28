@@ -7,25 +7,44 @@ var passport =require("passport");
 var LocalStrategy=require("passport-local");
 var methodOverride = require("method-override");
 var Ngo =require("./models/Ngo");
-var User =require("./models/User")
+var User =require("./models/User");
+// var authRoutes= require('./routes/auth');
+var projectRoutes= require('./routes/project');
 // var seedDB = require("./seed");
 app.set("view engine","ejs");
-app.use(express.static(__dirname + '/public'));
-
+// app.use(express.static(__dirname + '/public'));
+app.use(express.static('public'));
 // seedDB();
 mongoose.set('useNewUrlParser', true);
 mongoose.set('useUnifiedTopology', true);
 mongoose.connect("mongodb://localhost/nitshacks3");
-app.use(bodyParser.urlencoded({extended:true}));
+app.use(bodyParser.urlencoded({extended:false}));
+
+app.use(require("express-session")({
+	secret: "I am the best",
+	resave: false,
+	saveUninitialized: false
+}));
 
 app.use(passport.initialize());
 app.use(passport.session());
 passport.use('user',new LocalStrategy(User.authenticate()));
-passport.serializeUser(User.serializeUser());
-passport.deserializeUser(User.deserializeUser());
 passport.use('ngo',new LocalStrategy(Ngo.authenticate()));
-passport.serializeUser(Ngo.serializeUser());
-passport.deserializeUser(Ngo.deserializeUser());
+passport.serializeUser(function(user,done){
+	var key={
+		id:user.id,
+		type:user.usertype
+	}
+	done(null,key);
+});
+passport.deserializeUser(function(key,done){
+	  var Model = key.type === 'employee' ? User : Ngo; 
+  Model.findOne({
+    _id: key.id
+  },function(err, user) {
+    done(err, user);
+  });
+});
 
 
 app.use(function(req,res,next){
@@ -39,12 +58,20 @@ app.use(function(req,res,next){
 
 //home
 app.get('/',function(req,res){
+	console.log(req.user);
+	// console.log(req.ngo);
+	// console.log(req.Ngo);
 	res.render('index');
 });
 
 //landing page showing ngos based on categories
 app.get('/ngos/:ngoType',function(req,res){
+	console.log(req.user);
+	// console.log(req.ngo);
+	// console.log(req.Ngo);
 	var ngos=Ngo.find({type:req.params.ngoType},function(err,allngos){
+		if(allngos.length===0)
+			console.log("empty");
 		if(err){
 			console.log(err);
 		}else{
@@ -53,7 +80,7 @@ app.get('/ngos/:ngoType',function(req,res){
 	});
 })
 
-//signup page
+// app.use('/',authRoutes);
 app.get('/signup',function(req,res){
 	res.render('register_ngo');
 });
@@ -72,7 +99,7 @@ app.post('/ngos/add',function(req,res){
 			return res.render("index");
 		}
 		passport.authenticate("ngo")(req,res,function(){
-			res.redirect('/');
+			res.redirect('/ngos/health');
 		});
 	});
 	// await ngo.save();
@@ -112,7 +139,7 @@ app.post("/login/ngo",passport.authenticate("ngo",{
 	failureRedirect: "/login"
 }),function(req,res){
 });
-
+app.use('/project/',projectRoutes)
 app.listen(4000,function(){
 	console.log("Server has been Started");
 })

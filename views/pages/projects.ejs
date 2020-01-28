@@ -1,0 +1,49 @@
+<% include ../partials/top %>
+
+<!-- Banner -->
+<!-- Note: The "styleN" class below should match that of the header element. -->
+	<section id="banner" class="style1">
+		<div class="inner">
+			<span class="image">
+				<img src="images/pic07.jpg" alt="" />
+			</span>
+			<header class="major">
+				<h1><%= ngo.username %></h1>
+			</header>
+			<div class="content">
+				<p><%= ngo.description %></p>
+			</div>
+		</div>
+	</section>
+
+<!-- Main -->
+	<div id="main">
+
+		<!-- Two -->
+		
+		<section id="two" class="spotlights">
+			<%projects.forEach(function(project){%>
+				<section>
+					<a href="/project/<%= project._id %>" class="image">
+						<img src="images/pic08.jpg" alt="" data-position="center center" />
+					</a>
+					<div class="content">
+						<div class="inner">
+							<header class="major">
+								<h3><%= project.title %></h3>
+							</header>
+							<p><%= project.description %></p>
+							<ul class="actions">
+								<li><a href="/project/<%= project._id %>" class="button">Learn more</a></li>
+							</ul>
+						</div>
+					</div>
+				</section>
+			<% });%>
+		</section>
+
+		<!-- Three -->
+
+	</div>
+
+<% include ../partials/footer %>
