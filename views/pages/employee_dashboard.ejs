@@ -1,0 +1,41 @@
+<%include ../partials/top%>
+<div class="main">
+	<br>
+	<div class="grid">
+		<div class="col-6 col-12-small">
+			<%if(requestType!= 'ppr'){%>
+				<button onclick="window.location.href='/employee/ppr'" >Pending Permission Requests</button>
+			<%}if(requestType!= 'apr'){%>
+				<button onclick="window.location.href='/employee/apr'" >Approved Permission Requests</button>
+			<%}if(requestType!= 'pfr'){%>
+				<button onclick="window.location.href='/employee/pfr'" >Pending Fund Requests</button>
+			<%}if(requestType!= 'afr'){%>
+				<button onclick="window.location.href='/employee/afr'" >Approved Fund Requests</button>
+			<%}%>		
+		</div>
+		<div>
+			<div>
+				<%if(requestType== 'ppr'){%>
+					<h1>Pending Permission Requests</h1>
+				<%}else if(requestType== 'apr'){%>
+					<h1>Approved Permission Requests</h1>
+				<%}else if(requestType== 'pfr'){%>
+					<h1>Pending Fund Requests</h1>
+				<%}else{%>
+					<h1>Approved Fund Requests</h1>
+				<%} %>
+			</div>
+			<div>	
+				<%requests.forEach(function(request){%>
+					<div  onclick="location.href='/showpermissionRequest/<%= request._id %>';" >
+						<h3><%=request.project%></h3>
+						<!-- <strong>type: <%= request.type%></strong> -->
+						<p><%=request.application%></p>
+					</div>
+				<%});%>
+			</div>
+		</div>
+	</div>
+</div>
+
+<%include ../partials/footer%>

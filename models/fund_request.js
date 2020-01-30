@@ -4,11 +4,8 @@ var fundrequestSchema=new mongoose.Schema({
 	application:String,
 	type:String,
 	Project:{
-		id:{
-			type:mongoose.Schema.Types.ObjectId,
-			ref: "Project"
-		},
-		title:String
+		type:mongoose.Schema.Types.ObjectId,
+		ref: "Project"
 	},
 	status:String
 });

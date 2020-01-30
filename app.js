@@ -8,6 +8,7 @@ var LocalStrategy=require("passport-local");
 var methodOverride = require("method-override");
 var Ngo =require("./models/Ngo");
 var User =require("./models/User");
+var Project= require("./models/Project");
 var permissionRequest =require("./models/permission_request");
 var fundRequest =require("./models/fund_request");
 var projectRoutes= require('./routes/project');
@@ -146,10 +147,21 @@ app.post("/login/ngo",passport.authenticate("ngo",{
 
 //employee dashboard
 //permission routes
-app.get("/employee/ppr",function(req,res){
+app.get("/employee/ppr",function(req,res,next){
 	if(req.user.usertype==='employee'){
 		permissionRequest.find({type:req.user.type,status:'pending'},function(err,pendingpermissionRequests){
-			res.render('employee_dashboard',{pendingpermissionRequests:pendingpermissionRequests});
+			console.log(pendingpermissionRequests);
+			quiteRepetetive(err,pendingpermissionRequests,function(requests,err){
+				if(err){
+					console.log('me');
+					next(err);
+				}
+				else{
+					console.log('meagain');
+					res.render('pages/employee_dashboard',{requests,requestType:'ppr'});
+				}
+			})
+			
 		});
 	}else{
 		res.send("Access Denied");
@@ -157,8 +169,13 @@ app.get("/employee/ppr",function(req,res){
 });
 app.get("/employee/apr",function(req,res){
 	if(req.user.usertype==='employee'){
-		permissionRequest.find({type:req.user.type,status:'approved'},function(err,approvedfundRequests){
-			res.render('employee_dashboard',{});
+		permissionRequest.find({type:req.user.type,status:'approved'},function(err,approvedpermissionRequests){
+			quiteRepetetive(err,approvedpermissionRequests,function(requests,err){
+				if(err)
+					next(err);
+				else
+					res.render('pages/employee_dashboard',{requests,requestType:'apr'});
+			});
 		});
 	}else{
 		res.send("Access Denied");
@@ -169,7 +186,12 @@ app.get("/employee/apr",function(req,res){
 app.get("/employee/pfr",function(req,res){
 	if(req.user.usertype==='employee'){
 		fundRequest.find({type:req.user.type,status:'pending'},function(err,pendingfundRequests){
-			res.render('employee_dashboard',{});
+			quiteRepetetive(err,pendingfundRequests,function(requests,err){
+				if(err)
+					next(err);
+				else
+					res.render('pages/employee_dashboard',{requests,requestType:'pfr'});
+			})
 		});
 	}else{
 		res.send("Access Denied");
@@ -178,12 +200,98 @@ app.get("/employee/pfr",function(req,res){
 app.get("/employee/afr",function(req,res){
 	if(req.user.usertype==='employee'){
 		fundRequest.find({type:req.user.type,status:'approved'},function(err,approvedfundRequests){
-			res.render('employee_dashboard',{});
+			quiteRepetetive(err,approvedfundRequests,function(requests,err){
+				if(err)
+					next(err);
+				else
+					res.render('pages/employee_dashboard',{requests,requestType:'afr'});
+			})
 		});
 	}else{
 		res.send("Access Denied");
 	}
 });
+
+app.get('/showpermissionRequest/:id',function(req,res){
+	permissionRequest.findOne({_id:req.params.id},function(err,request){
+		if(err){
+			console.log(err);
+		}else{
+			Project.findOne({_id:request.Project},function(err,project){
+				if(err){
+					console.log(err);
+				}else{
+					var requestObj={
+						// id:request._id,
+						application:request.application,
+						status: request.status,
+						title:project.title,
+						projectId: project._id,
+						permissionDocument:request.permissionDocument
+					}
+					res.render("pages/permissionRequest",{request:requestObj});
+				}
+			});
+			
+		}
+	});
+});
+app.get('/showfundRequest/:id',function(req,res){
+	fundRequest.findOne({_id:req.params.id},function(err,request){
+		if(err){
+			console.log(err);
+		}else{
+			Project.findOne({_id:request.Project},function(err,project){
+				if(err){
+					console.log(err);
+				}else{
+					var requestObj={
+						// id:request._id,
+						application:request.application,
+						status: request.status,
+						title:project.title,
+						projectId: project._id,
+						permissionDocument:request.permissionDocument
+					}
+					res.render("request",{request:requestObj});
+				}
+			});
+			
+		}
+	});
+});
+
+function quiteRepetetive(err,Requests,func){
+	if(err)
+		func(null,err);
+	else{
+		const requests=[];
+		console.log(Requests.length);
+		Requests.forEach((request)=>{
+			console.log("inside req",Requests.length);
+			Project.findOne({_id: request.Project},"title",function(err,project){
+				if(err){
+					console.log("inside err",Requests.length);
+					func(null,err);
+				}
+				else{
+					requests.push({
+						_id: request._id,
+						application: request.application,
+						project: project.title
+					});
+					console.log(Requests.length);
+					if(requests.length === Requests.length){
+
+						// res.render('pages/employee_dashboard',{requests,requestType:type});
+						func(requests,null);
+					}
+				}
+			});
+		});
+
+	}
+}
 
 app.use('/project/',projectRoutes);
 

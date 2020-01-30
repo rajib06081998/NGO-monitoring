@@ -3,6 +3,7 @@ const express=require('express');
 const Project=require('../models/Project');
 const Log=require('../models/Log')
 const Ngo=require('../models/Ngo');
+const permissionRequest=require('../models/permission_request');
 const router=express.Router();
 // var upload = multer({ dest: 'public/images/' });
 
@@ -88,32 +89,60 @@ router.get('/:id/edit',(req,res,next)=>{
 router.post('/:id/edit',(req,res,next)=>{
 	res.redirect('/');
 });
-
+router.get('/:id/apply-for-permission',(req,res)=>{
+	res.render('pages/apply permission form');
+})
 router.post('/:id/apply-for-permission',(req,res,next)=>{
 	const ob={  _id: req.params.id,
 				Ngo: req.user._id
 			 };
 	Project.findOne(ob,(err,project)=>{
-		if(err)
+		if(err){
+			console.log("in err");
 			next(err);
+		}
 		else if(project==null)
 			res.send("no such project/ you don't have the permission");
 		else if(project.stage==="Created"){
-			// project.permApplication=req.body.application;
-			upgrade(project,"Applied for permission",(err)=>{
-				if(err)
+			Ngo.findOne({_id: project.Ngo}, "type", (err,ngo)=>{
+				if(err){
+					console.log('in er');
 					next(err);
-				else
-					res.redirect('/');
-			});
+				}
+				else{
+					const permRequest={
+						application: req.body.application,
+						status: 'pending',
+						type: ngo.type,
+						Project: project._id
+					}
+					console.log(permRequest);
+					permissionRequest.create(permRequest,(err,permRequest)=>{
+						if(err)
+							next(err)
+						upgrade(project,"Applied for permission",(err)=>{
+							if(err)
+								next(err);
+							else{
+								console.log("lskdj slkddj")
+								res.redirect('/ngos/health');
+							}
+						});	
+					})
+					// project.permApplication=req.body.application;
+				}
+			})
 		}
 		else{
+			console.log("not created")
 			res.redirect('/');
 		}
 	});
 });
-
-router.post('/:id/approve-permission',(req,res,next)=>{
+router.get('/:reqId/approve-permission',(req,res)=>{
+	res.render('pages/approve permision form');
+})
+router.post('/:reqId/approve-permission',(req,res,next)=>{
 	//There should be a check at this point to make sure the
 	// the user is the appropriate government representative
 
@@ -140,7 +169,7 @@ function upgrade(project,stage,func){
 				stage: stage,
 				date: Date.now()
 			};
-			Log.Create(newLog,(err,log)=>{
+			Log.create(newLog,(err,log)=>{
 				if(err) 
 					func(err);
 				else

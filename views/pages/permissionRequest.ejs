@@ -1,0 +1,26 @@
+<% include ../partials/top %>
+
+<div id="main" class="alt">
+
+		<!-- One -->
+			<section id="one">
+				<div  onclick="location.href='/project/<%= request.projectId %>';" class="inner">
+					<header class="major">
+						<h1><%=request.title%></h1>
+					</header>
+					<span class="image main"><img src="images/pic11.jpg" alt="" /></span>
+					<p><%=request.application%></p>
+				</div>
+				<!-- show documents -->
+				<%if(request.status==='pending') { %>
+					<div>
+						<button class="btn btn-success">Approve</button>
+						<button class="btn btn-danger">Deny</button>
+					</div>
+						
+				<%}%>
+			</section>
+
+	</div>
+
+<% include ../partials/footer %>

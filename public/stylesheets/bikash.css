@@ -18,3 +18,25 @@
 	padding-left: 10px;
 	padding-top: 5px;
 }
+.grid{
+	display: flex;
+	flex-wrap: nowrap;
+	box-sizing: border-box;
+}
+.grid div:nth-child(1){
+	flex-basis: 20%;
+	margin-left: 50px;
+	margin-right: 100px;
+}
+.grid div:nth-child(2){
+	flex-basis: 80%;
+	flex-grow: 1.2;
+}
+.grid h1{
+	text-align: center;
+}
+.grid button{
+	font-size: 0.6rem;
+	margin-bottom: 15px;
+	text-decoration: none;
+}
