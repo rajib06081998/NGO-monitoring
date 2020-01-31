@@ -13,21 +13,64 @@
 			</div>
 		</section>
 		<section>
-			<header class="major">
-				<h2>Project Stages</h2>
-			</header>
-			<div class="timelineVisual">
-				<%logs.forEach(function(log){%>
-					<img src="/images/timeline.svg">
-				<%});%>
-				<!-- <img src="images/timeline.svg"> -->
+			<div class="inner">
+				<header class="major">
+					<h2>Assign NGO</h2>
+				</header>
+				<form method="post" action="/project/assignNgo/<%= project._id %>">
+					<div class="row gtr-uniform">
+						<div class="col-6 col-12-xsmall">
+							<select name="Ngo">
+								<% if(project.isGovt && project.Ngo== null){ %>
+									<%ngos.forEach(function(ngo){%>
+										<option><%= ngo.username%></option>
+									<%})%>
+								<%}%>
+							</select>
+						</div>
+						<!-- Break -->
+						<div class="col-12">
+							<ul class="actions">
+								<li><input type="submit" value="Create" class="primary" /></li>
+								<!-- <li><input type="reset" value="Reset" /></li> -->
+							</ul>
+						</div>
+					</div>
+				</form>
 			</div>
-			<div class="timelineContent">
-				<%logs.forEach(function(log){%>
-					<div><%=log.stage%> on <%= log.date %></div>
-				<%});%>
-				<!-- <div class="stage">Created on 1/26/2020</div> -->
-				<!-- <div class="stage">Created on 1/26/2020</div> -->
+		</section>
+		
+		<section>
+			<div class="inner">
+				<header class="major">
+					<h1>Actions</h1>
+				</header>
+				<ul class="actions">
+					<li><a href="/project/<%= project._id %>/apply-for-permission" class="button">
+					Apply for permissions</a></li>
+					<li><a href="/project/<%= project._id %>/apply-for-fund" class="button">Apply for fund</a></li>
+					<li><a href="/project/<%= project._id %>/add-proofs-of-completion" class="button">Add proofs of completion</a></li>
+				</ul>
+			</div>
+		</section>
+		<section>
+			<div class="inner">
+				<header class="major">
+					<h2>Project Stages</h2>
+				</header>
+				<div class="timelineVisual">
+					<%logs.forEach(function(log){%>
+						<img src="/images/timeline.svg">
+					<%});%>
+					<!-- <img src="images/timeline.svg"> -->
+				</div>
+				<div class="timelineContent">
+					<%logs.forEach(function(log){%>
+						<div><%=log.stage%> on <%= log.date %></div>
+					<%});%>
+					<!-- <div class="stage">Created on 1/26/2020</div> -->
+					<!-- <div class="stage">Created on 1/26/2020</div> -->
+				</div>
 			</div>
 		</section>
 </div>

@@ -8,6 +8,8 @@ var projectSchema=new mongoose.Schema({
 			ref: "Ngo"
 	},
 	stage: String,
-	document: String
+	document: String,
+	type: String,
+	isGovt: Boolean
 });
 module.exports=mongoose.model("Project",projectSchema);

@@ -8,16 +8,8 @@
 				<img src="images/pic07.jpg" alt="" />
 			</span>
 			<header class="major">
-				<h1><%= ngo.username %></h1>
+				<h1>Government Projects</h1>
 			</header>
-			<div class="content">
-				<p><%= ngo.description %></p>
-				<%if(loggedIn && owner){%>
-				<ul class="actions">
-					<li><a href="/project/add" class="button next scrolly">Add Project</a></li>
-				</ul>
-				<%}%>
-			</div>
 		</div>
 	</section>
 
@@ -30,7 +22,7 @@
 			<%projects.forEach(function(project){%>
 				<section>
 					<a href="/project/<%= project._id %>" class="image">
-						<img src="images/pic08.jpg" alt="" data-position="center center" />
+						<img src="/uploads/project/<%= project.image%>" alt="" data-position="center center" />
 					</a>
 					<div class="content">
 						<div class="inner">

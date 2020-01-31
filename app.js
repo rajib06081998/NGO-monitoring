@@ -12,6 +12,7 @@ var Project= require("./models/Project");
 var permissionRequest =require("./models/permission_request");
 var fundRequest =require("./models/fund_request");
 var projectRoutes= require('./routes/project');
+var employeeRoutes= require('./routes/employee');
 // var seedDB = require("./seed");
 app.set("view engine","ejs");
 app.use(express.static(__dirname + '/public'));
@@ -62,7 +63,7 @@ app.use(function(req,res,next){
 //home
 app.get('/',function(req,res){
 	console.log(req.user);
-	res.render('index');
+	res.render('index',{loggedIn: req.user? true: false});
 });
 
 //landing page showing ngos based on categories
@@ -72,14 +73,20 @@ app.get('/ngos/:ngoType',function(req,res){
 		if(err){
 			console.log(err);
 		}else{
-			res.render('ngos_based_on_type',{ngoType:req.params.ngoType,ngos:allngos});
+			if(allngos.length==0)
+				res.send("no ngos of type "+req.params.ngoType);
+			const ob={ngoType:req.params.ngoType,
+				ngos:allngos,
+				loggedIn: req.user? true: false
+			}
+			res.render('ngos_based_on_type',ob);
 		}
 	});
 })
 
 //signup page
 app.get('/signup',function(req,res){
-	res.render('register_ngo');
+	res.render('register_ngo',{loggedIn: req.user? true: false});
 });
 //adding ngo to database using data from signup page
 app.post('/ngos/add',function(req,res){
@@ -93,7 +100,7 @@ app.post('/ngos/add',function(req,res){
 	Ngo.register(ngo,req.body.password,function(err,ngo){
 		if(err){
 			console.log(err);
-			return res.render("index");
+			return res.render("index",{loggedIn: req.user? true: false});
 		}
 		passport.authenticate("ngo")(req,res,function(){
 			res.redirect('/');
@@ -106,7 +113,7 @@ app.post('/ngos/add',function(req,res){
 //employee signup
 
 app.get('/employee/signup',function(req,res){
-	res.render('register_employee');
+	res.render('register_employee',{loggedIn: req.user? true: false});
 });
 
 app.post("/employee/signup",function(req,res){
@@ -125,7 +132,7 @@ app.post("/employee/signup",function(req,res){
 
 //user login
 app.get("/login/user",function(req,res){
-	res.render("login_user");
+	res.render("login_user",{loggedIn: req.user? true: false});
 });
 
 app.post("/login/user",passport.authenticate("user",{
@@ -136,163 +143,16 @@ app.post("/login/user",passport.authenticate("user",{
 
 //ngo login
 app.get("/login/ngo",function(req,res){
-	res.render("login_ngo");
+	res.render("login_ngo",{loggedIn: req.user? true: false});
 });
 
 app.post("/login/ngo",passport.authenticate("ngo",{
-	successRedirect: "/ngos/health",
 	failureRedirect: "/login/ngo"
 }),function(req,res){
+	res.redirect('/project?ngoId='+req.user._id);
 });
 
-//employee dashboard
-//permission routes
-app.get("/employee/ppr",function(req,res,next){
-	if(req.user.usertype==='employee'){
-		permissionRequest.find({type:req.user.type,status:'pending'},function(err,pendingpermissionRequests){
-			console.log(pendingpermissionRequests);
-			quiteRepetetive(err,pendingpermissionRequests,function(requests,err){
-				if(err){
-					console.log('me');
-					next(err);
-				}
-				else{
-					console.log('meagain');
-					res.render('pages/employee_dashboard',{requests,requestType:'ppr'});
-				}
-			})
-			
-		});
-	}else{
-		res.send("Access Denied");
-	}
-});
-app.get("/employee/apr",function(req,res){
-	if(req.user.usertype==='employee'){
-		permissionRequest.find({type:req.user.type,status:'approved'},function(err,approvedpermissionRequests){
-			quiteRepetetive(err,approvedpermissionRequests,function(requests,err){
-				if(err)
-					next(err);
-				else
-					res.render('pages/employee_dashboard',{requests,requestType:'apr'});
-			});
-		});
-	}else{
-		res.send("Access Denied");
-	}
-});
-
-//fund routes
-app.get("/employee/pfr",function(req,res){
-	if(req.user.usertype==='employee'){
-		fundRequest.find({type:req.user.type,status:'pending'},function(err,pendingfundRequests){
-			quiteRepetetive(err,pendingfundRequests,function(requests,err){
-				if(err)
-					next(err);
-				else
-					res.render('pages/employee_dashboard',{requests,requestType:'pfr'});
-			})
-		});
-	}else{
-		res.send("Access Denied");
-	}
-});
-app.get("/employee/afr",function(req,res){
-	if(req.user.usertype==='employee'){
-		fundRequest.find({type:req.user.type,status:'approved'},function(err,approvedfundRequests){
-			quiteRepetetive(err,approvedfundRequests,function(requests,err){
-				if(err)
-					next(err);
-				else
-					res.render('pages/employee_dashboard',{requests,requestType:'afr'});
-			})
-		});
-	}else{
-		res.send("Access Denied");
-	}
-});
-
-app.get('/showpermissionRequest/:id',function(req,res){
-	permissionRequest.findOne({_id:req.params.id},function(err,request){
-		if(err){
-			console.log(err);
-		}else{
-			Project.findOne({_id:request.Project},function(err,project){
-				if(err){
-					console.log(err);
-				}else{
-					var requestObj={
-						// id:request._id,
-						application:request.application,
-						status: request.status,
-						title:project.title,
-						projectId: project._id,
-						permissionDocument:request.permissionDocument
-					}
-					res.render("pages/permissionRequest",{request:requestObj});
-				}
-			});
-			
-		}
-	});
-});
-app.get('/showfundRequest/:id',function(req,res){
-	fundRequest.findOne({_id:req.params.id},function(err,request){
-		if(err){
-			console.log(err);
-		}else{
-			Project.findOne({_id:request.Project},function(err,project){
-				if(err){
-					console.log(err);
-				}else{
-					var requestObj={
-						// id:request._id,
-						application:request.application,
-						status: request.status,
-						title:project.title,
-						projectId: project._id,
-						permissionDocument:request.permissionDocument
-					}
-					res.render("request",{request:requestObj});
-				}
-			});
-			
-		}
-	});
-});
-
-function quiteRepetetive(err,Requests,func){
-	if(err)
-		func(null,err);
-	else{
-		const requests=[];
-		console.log(Requests.length);
-		Requests.forEach((request)=>{
-			console.log("inside req",Requests.length);
-			Project.findOne({_id: request.Project},"title",function(err,project){
-				if(err){
-					console.log("inside err",Requests.length);
-					func(null,err);
-				}
-				else{
-					requests.push({
-						_id: request._id,
-						application: request.application,
-						project: project.title
-					});
-					console.log(Requests.length);
-					if(requests.length === Requests.length){
-
-						// res.render('pages/employee_dashboard',{requests,requestType:type});
-						func(requests,null);
-					}
-				}
-			});
-		});
-
-	}
-}
-
+app.use('/employee/',employeeRoutes);
 app.use('/project/',projectRoutes);
 
 app.get("/logout",function(req,res){

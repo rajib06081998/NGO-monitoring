@@ -13,6 +13,27 @@ const router=express.Router();
 // 	else
 // 		res.redirect('/accounts');
 // });
+const multer = require("multer");
+const ejs=require('ejs');
+const path=require('path');
+
+
+
+//set storage engine 1
+const storage=multer.diskStorage({
+	destination: 'public/uploads/project',
+	filename: function(req,file,cb){
+		cb(null,file.fieldname + '_' + Date.now() + path.extname(file.originalname));
+	}
+});
+
+//2
+const upload = multer({
+	storage: storage
+//   dest: "/uploads/project"
+//   // you might also want to set some limits: https://github.com/expressjs/multer#limits
+ }).single('myFile');
+
 
 router.get('/',(req,res,next)=>{
 	// ngoId is the userId btw
@@ -26,44 +47,85 @@ router.get('/',(req,res,next)=>{
 			Ngo.findOne({_id: ngoId},(err,ngo)=>{
 				if(err)
 					next(err);
-				else
-					res.render('pages/projects.ejs',{projects,ngo});
+				else{
+					const ob={
+						ngo,
+						projects,
+						loggedIn: false,
+						owner: false
+					}
+					if(req.user){
+						ob.loggedIn=true;
+						ob.owner=(req.user._id.toString()==ngo._id.toString())? true: false;
+					}
+					console.log(ob.owner);
+					res.render('pages/projects.ejs',ob);
+				}
 			});
 		}
 	});
 	
 });
 router.get('/add',(req,res,next)=>{
-	res.render('pages/project form.ejs');
+	res.render('pages/project form.ejs',{loggedIn: req.user? true: false});
 });
 router.post('/add',(req,res,next)=>{
-	console.log(req.user);
-	const newProject={
-		title: req.body.Title,
-		description: req.body.Description,
-		stage: "Created",
-		Ngo: req.user._id
-	};
-	Project.create(newProject,(err,project)=>{
+	upload(req,res,(err)=>{
 		if(err)
 			next(err);
 		else{
-			console.log(project);
-			const newLog= {
-				Project:project._id,
+			console.log(req.user);
+			const newProject={
+				title: req.body.Title,
+				description: req.body.Description,
 				stage: "Created",
-				date: Date.now()
+				image: req.file.filename,
+				Ngo: req.user._id,
+				type: req.user.type,
+				isGovt: false
 			};
-			Log.create(newLog,(err,log)=>{
+			Project.create(newProject,(err,project)=>{
 				if(err)
-				 	next(err);
-				else
-					res.redirect('/');
+					next(err);
+				else{
+					console.log(project);
+					const newLog= {
+						Project:project._id,
+						stage: "Created",
+						date: Date.now()
+					};
+					Log.create(newLog,(err,log)=>{
+						if(err)
+						 	next(err);
+						else
+							res.redirect('/project/'+project._id);
+					});
+				}
 			});
 		}
-	});
+	})
+	
 	// res.redirect('/projects');
 });
+router.get('/gov',(req,res,next)=>{
+	// ngoId is the userId btw
+	const ob= (req.user)? {isGovt: true,type: req.user.type}: {isGovt: true};
+	Project.find(ob,null,{limit: 100},(err,projects)=>{
+		if(projects.length==0)
+			console.log("empty");
+		if(err)
+			next(err);
+		else{
+			const ob={
+				projects,
+				loggedIn: req.user? true: false
+			}
+			res.render('pages/govt projects.ejs',ob);
+		}
+	});
+	
+});
+
 router.get('/:id',(req,res,next)=>{
 	Project.findOne({_id:req.params.id},(err,project)=>{
 		if(err) next(err);
@@ -73,9 +135,33 @@ router.get('/:id',(req,res,next)=>{
 			// 	permission
 			// }
 			Log.find({Project: project._id},"stage date",(err,logs)=>{
-				if(logs.length==0)
-					console.log("empty");
-				res.render('pages/project.ejs',{project,logs});
+				if(err)
+					next(err);
+				else{
+					if(project.isGovt && project.Ngo== null){
+						Ngo.find({type: project.type},"username",(err,ngos)=>{
+							if(err)
+								next(err);
+							else{
+								const ob={project,
+								  		  logs,
+								  		  ngos,
+								  		  loggedIn: req.user? true: false
+										}
+								res.render('pages/project.ejs',ob);
+							}
+						})
+					}
+					else{
+						const ob={
+							project,
+							logs,
+							loggedIn: req.user?true: false
+						}
+						res.render('pages/project.ejs',ob);
+					}
+				}
+				
 			});
 		}
 	})
@@ -90,7 +176,7 @@ router.post('/:id/edit',(req,res,next)=>{
 	res.redirect('/');
 });
 router.get('/:id/apply-for-permission',(req,res)=>{
-	res.render('pages/apply permission form');
+	res.render('pages/apply permission form',{loggedIn: req.user? true: false});
 })
 router.post('/:id/apply-for-permission',(req,res,next)=>{
 	const ob={  _id: req.params.id,
@@ -106,7 +192,7 @@ router.post('/:id/apply-for-permission',(req,res,next)=>{
 		else if(project.stage==="Created"){
 			Ngo.findOne({_id: project.Ngo}, "type", (err,ngo)=>{
 				if(err){
-					console.log('in er');
+					// console.log('in er');
 					next(err);
 				}
 				else{
@@ -124,8 +210,8 @@ router.post('/:id/apply-for-permission',(req,res,next)=>{
 							if(err)
 								next(err);
 							else{
-								console.log("lskdj slkddj")
-								res.redirect('/ngos/health');
+								// console.log("lskdj slkddj")
+								res.redirect('/project/'+project._id);
 							}
 						});	
 					})
@@ -147,7 +233,6 @@ router.post('/:reqId/approve-permission',(req,res,next)=>{
 	// the user is the appropriate government representative
 
 	//The Mail sending code somewhere here
-
 	Project.findOne({_id:req.params.id},(err,project)=>{
 		upgrade(project, "permission approved", (err)=>{
 			if(err)
@@ -157,6 +242,80 @@ router.post('/:reqId/approve-permission',(req,res,next)=>{
 		});
 	});
 });
+
+router.get('/add/gov',(req,res,next)=>{
+	res.render('pages/govt project form.ejs',{loggedIn: req.user? true: false});
+});
+
+router.post('/add/gov',(req,res,next)=>{
+
+	upload(req,res,(err) =>{
+		if(err){
+			console.log(err);
+		}
+		else
+		{
+			console.log(req.file);
+				console.log(req.user);
+				const newProject={
+					title: req.body.Title,
+					description: req.body.Description,
+					stage: "Created",
+					image: req.file.filename,
+					type: req.user.type,
+					isGovt: true
+				};
+
+
+				Project.create(newProject,(err,project)=>{
+					if(err)
+						next(err);
+					else{
+						console.log(project);
+						const newLog= {
+							Project:project._id,
+							stage: "Created",
+							date: Date.now()
+						};
+						Log.create(newLog,(err,log)=>{
+							if(err)
+							 	next(err);
+							else
+								res.redirect('/');
+						});
+					}
+				});
+
+		}
+	});
+
+});
+
+
+
+router.post('/assignNgo/:projectId',(req,res,next)=>{
+	Project.findOne({_id: req.params.projectId},(err,project)=>{
+		if(err)
+			next(err);
+		else{
+			Ngo.findOne({username: req.body.Ngo},(err,ngo)=>{
+				if(err)
+					next(err);
+				else{
+					project.Ngo= ngo._id;
+					project.save((err)=>{
+						if(err)
+							next(err);
+						else{
+							res.redirect('/project?ngoId='+ngo._id);
+						}
+					})
+				}
+			})
+		}
+	})
+})
+
 
 function upgrade(project,stage,func){
 	project.stage=stage;
@@ -179,3 +338,4 @@ function upgrade(project,stage,func){
 	})
 }
 module.exports=router;
+

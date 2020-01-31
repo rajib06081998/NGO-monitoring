@@ -27,7 +27,14 @@
 			</div>
 			<div>	
 				<%requests.forEach(function(request){%>
-					<div  onclick="location.href='/showpermissionRequest/<%= request._id %>';" >
+					<div  onclick="
+							location.href=
+							<%if(requestType== 'ppr' || requestType== 'apr'){%>
+								'/employee/showpermissionRequest/<%= request._id %>'
+							<%}else{%>
+								'/employee/showfundRequest/<%= request._id %>'
+							<%}%>
+							;" >
 						<h3><%=request.project%></h3>
 						<!-- <strong>type: <%= request.type%></strong> -->
 						<p><%=request.application%></p>

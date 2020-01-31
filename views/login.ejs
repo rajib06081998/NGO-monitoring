@@ -1,14 +1,28 @@
-<!DOCTYPE html>
-<html>
-<head>
-	<title>login</title>
-</head>
-<body>
-	<h1>Login Form</h1>
-	<form action="/login/ngo" method="POST">
-		<input type="text" name="username" placeholder="username">
-		<input type="text" name="password" placeholder="password">
-		<input type="submit" value="Login!">
-	</form>
-</body>
-</html>
+<% include ./partials/top %>
+
+<section id="one">
+	<div class="inner">
+		<header class="major">
+			<h2>Login Form</h2>
+		</header>
+		<form method="post" action="#">
+			<div class="row gtr-uniform">
+				<div class="col-6 col-12-xsmall">
+					<input type="text" name="username" placeholder="username">
+				</div>
+				<div class="col-12">
+					<input type="password" name="password" placeholder="password">
+				</div>
+				<!-- Break -->
+				<div class="col-12">
+					<ul class="actions">
+						<li><input type="submit" value="login" class="primary" /></li>
+						<!-- <li><input type="reset" value="Reset" /></li> -->
+					</ul>
+				</div>
+			</div>
+		</form>
+	</div>
+</section>
+
+<% include ./partials/footer %>
