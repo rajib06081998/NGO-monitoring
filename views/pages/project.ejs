@@ -8,38 +8,37 @@
 				<header class="major">
 					<h1><%=project.title%></h1>
 				</header>
-				<span class="image main"><img src="images/pic11.jpg" alt="" /></span>
+				<span class="image main"><img src="/uploads/project/<%= project.image%>" alt="" /></span>
 				<p><%=project.description%></p>
 			</div>
 		</section>
-		<section>
-			<div class="inner">
-				<header class="major">
-					<h2>Assign NGO</h2>
-				</header>
-				<form method="post" action="/project/assignNgo/<%= project._id %>">
-					<div class="row gtr-uniform">
-						<div class="col-6 col-12-xsmall">
-							<select name="Ngo">
-								<% if(project.isGovt && project.Ngo== null){ %>
-									<%ngos.forEach(function(ngo){%>
-										<option><%= ngo.username%></option>
-									<%})%>
-								<%}%>
-							</select>
+		<% if(project.isGovt && project.Ngo== null){ %>
+			<section>
+				<div class="inner">
+					<header class="major">
+						<h2>Assign NGO</h2>
+					</header>
+					<form method="post" action="/project/assignNgo/<%= project._id %>">
+						<div class="row gtr-uniform">
+							<div class="col-6 col-12-xsmall">
+								<select name="Ngo">
+										<%ngos.forEach(function(ngo){%>
+											<option><%= ngo.username%></option>
+										<%})%>
+								</select>
+							</div>
+							<!-- Break -->
+							<div class="col-12">
+								<ul class="actions">
+									<li><input type="submit" value="Create" class="primary" /></li>
+									<!-- <li><input type="reset" value="Reset" /></li> -->
+								</ul>
+							</div>
 						</div>
-						<!-- Break -->
-						<div class="col-12">
-							<ul class="actions">
-								<li><input type="submit" value="Create" class="primary" /></li>
-								<!-- <li><input type="reset" value="Reset" /></li> -->
-							</ul>
-						</div>
-					</div>
-				</form>
-			</div>
-		</section>
-		
+					</form>
+				</div>
+			</section>
+		<%}%>
 		<section>
 			<div class="inner">
 				<header class="major">

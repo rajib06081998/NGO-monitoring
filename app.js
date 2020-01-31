@@ -103,7 +103,7 @@ app.post('/ngos/add',function(req,res){
 			return res.render("index",{loggedIn: req.user? true: false});
 		}
 		passport.authenticate("ngo")(req,res,function(){
-			res.redirect('/');
+			res.redirect('/project?ngoId='+req.user._id);
 		});
 	});
 	// await ngo.save();
@@ -123,7 +123,7 @@ app.post("/employee/signup",function(req,res){
 			res.redirect("/employee/signup");
 		}
 		passport.authenticate("user")(req,res,function(){
-			res.redirect("/");
+			res.redirect("/employee/ppr");
 		});
 	});
 });
@@ -136,9 +136,9 @@ app.get("/login/user",function(req,res){
 });
 
 app.post("/login/user",passport.authenticate("user",{
-	successRedirect: "/",
 	failureRedirect: "/login/user"
 }),function(req,res){
+	res.redirect("/employee/ppr");
 });
 
 //ngo login

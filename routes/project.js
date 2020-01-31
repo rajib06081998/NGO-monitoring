@@ -109,22 +109,31 @@ router.post('/add',(req,res,next)=>{
 });
 router.get('/gov',(req,res,next)=>{
 	// ngoId is the userId btw
-	const ob= (req.user)? {isGovt: true,type: req.user.type}: {isGovt: true};
+	let ob,obj;
+	if(req.user){
+		 ob= (req.user.usertype==='employee')? {isGovt: true,type: req.user.type}: {isGovt: true};
+	}else{
+		 ob={isGovt: true};
+	}
 	Project.find(ob,null,{limit: 100},(err,projects)=>{
 		if(projects.length==0)
 			console.log("empty");
 		if(err)
 			next(err);
 		else{
-			const ob={
+			 obj={
 				projects,
-				loggedIn: req.user? true: false
+				loggedIn: req.user? true: false,
+				employee:false
 			}
-			res.render('pages/govt projects.ejs',ob);
+			if(req.user){
+				obj.employee=(req.user.usertype==='employee')? true: false;
+			}
 		}
+			res.render('pages/govt projects.ejs',obj);
 	});
-	
 });
+	
 
 router.get('/:id',(req,res,next)=>{
 	Project.findOne({_id:req.params.id},(err,project)=>{
@@ -225,23 +234,7 @@ router.post('/:id/apply-for-permission',(req,res,next)=>{
 		}
 	});
 });
-router.get('/:reqId/approve-permission',(req,res)=>{
-	res.render('pages/approve permision form');
-})
-router.post('/:reqId/approve-permission',(req,res,next)=>{
-	//There should be a check at this point to make sure the
-	// the user is the appropriate government representative
 
-	//The Mail sending code somewhere here
-	Project.findOne({_id:req.params.id},(err,project)=>{
-		upgrade(project, "permission approved", (err)=>{
-			if(err)
-				next(err);
-			else
-				res.redirect('/');
-		});
-	});
-});
 
 router.get('/add/gov',(req,res,next)=>{
 	res.render('pages/govt project form.ejs',{loggedIn: req.user? true: false});
@@ -281,7 +274,7 @@ router.post('/add/gov',(req,res,next)=>{
 							if(err)
 							 	next(err);
 							else
-								res.redirect('/');
+								res.redirect('/project/gov');
 						});
 					}
 				});

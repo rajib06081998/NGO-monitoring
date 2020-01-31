@@ -6,7 +6,8 @@ const Ngo=require('../models/Ngo');
 const permissionRequest=require('../models/permission_request');
 const fundRequest=require('../models/fund_request');
 const router=express.Router();
-
+const sgMail = require('@sendgrid/mail');
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 //employee dashboard
 //permission routes
 router.get("/ppr",function(req,res,next){
@@ -107,15 +108,14 @@ router.get('/showpermissionRequest/:id',function(req,res){
 					console.log(err);
 				}else{
 					var requestObj={
-						// id:request._id,
+						req_id:request._id,
 						application:request.application,
 						status: request.status,
 						title:project.title,
 						projectId: project._id,
-						permissionDocument:request.permissionDocument,
 						loggedIn: req.user? true: false
 					}
-					res.render("pages/permissionRequest",{request:requestObj});
+					res.render("pages/permissionRequest",requestObj);
 				}
 			});
 			
@@ -132,7 +132,7 @@ router.get('/showfundRequest/:id',function(req,res){
 					console.log(err);
 				}else{
 					var requestObj={
-						// id:request._id,
+						req_id:request._id,
 						application:request.application,
 						status: request.status,
 						title:project.title,
@@ -140,7 +140,7 @@ router.get('/showfundRequest/:id',function(req,res){
 						permissionDocument:request.permissionDocument,
 						loggedIn: req.user? true: false
 					}
-					res.render("request",{request:requestObj});
+					res.render("pages/fundRequest",requestObj);
 				}
 			});
 			
@@ -148,12 +148,90 @@ router.get('/showfundRequest/:id',function(req,res){
 	});
 });
 
+
+router.get('/:reqId/approve-permission',(req,res)=>{
+	res.render('pages/approve permission form',{loggedIn:req.user? true:false,projectId:req.query.projectId,req_id:req.params.reqId});
+})
+router.post('/:reqId/approve-permission',(req,res,next)=>{
+	//There should be a check at this point to make sure the
+	// the user is the appropriate government representative
+
+	//The Mail sending code somewhere here
+	const msg = {
+	  to: '',
+	  from: 'nitshacks3@gmail.com',
+	  subject: 'Project Permission Approved',
+	  text: 'Visit your dashboard to see the permission document',
+	};
+	
+
+	Project.findOne({_id:req.query.projectId},(err,project)=>{
+		Ngo.findOne({_id:project.Ngo},function(err,ngo){
+			if(err){
+				next(err);
+			}else{
+				msg.to=ngo.email;
+				sgMail.send(msg).then((result)=>{
+					console.log(result);
+					upgrade(project, "permission approved", (err)=>{
+						if(err){
+							next(err);
+						}
+						else{
+							permissionRequest.findOne({_id:req.params.reqId},function(err,request){
+								if(err){
+									next(err);
+								}else{
+									request.status='approved';
+									request.save(function(err){
+										if(err){
+											next(err);
+										}else{
+											res.redirect('/employee/ppr');
+										}
+									})
+								}
+							})
+							
+						}
+					});
+				}).catch((e)=>{
+					console.log(e);
+				})
+				
+			}
+		})
+	});
+});
+
+function upgrade(project,stage,func){
+	project.stage=stage;
+	project.save((err)=>{
+		if(err)
+			func(err);
+		else{
+			const newLog= {
+				Project:project._id,
+				stage: stage,
+				date: Date.now()
+			};
+			Log.create(newLog,(err,log)=>{
+				if(err) 
+					func(err);
+				else
+					func(null);
+			});
+		}
+	})
+}
 function quiteRepetetive(err,Requests,func){
 	if(err)
 		func(null,err);
 	else{
 		const requests=[];
-		console.log(Requests.length);
+		if(Requests.length===0){
+			func(requests,null);
+		}
 		Requests.forEach((request)=>{
 			console.log("inside req",Requests.length);
 			Project.findOne({_id: request.Project},"title",function(err,project){
