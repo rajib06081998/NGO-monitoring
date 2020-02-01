@@ -14,8 +14,8 @@
 				<!-- show documents -->
 				<%if(status==='pending') { %>
 					<div>
-						<button onclick="window.location.href='/employee/<%=req_id%>/approve-permission?projectId=<%=projectId%>'" class="btn btn-success">Approve</button>
-						<button class="btn btn-danger">Deny</button>
+						<button onclick="window.location.href='/employee/<%=req_id%>/approve-fund-request?projectId=<%=projectId%>'" class="btn btn-success">Approve</button>
+						<button onclick="window.location.href='/employee/<%=req_id%>/deny?request=fund'" class="btn btn-danger">Deny</button>
 					</div>
 						
 				<%}%>

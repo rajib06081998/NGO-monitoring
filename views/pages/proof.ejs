@@ -1,0 +1,46 @@
+<% include ../partials/top %>
+
+<section id="one">
+	<div class="inner">
+		<header class="major">
+			<h1>Documents of Project Completion</h1>
+		</header>
+
+			<div class="row text-center" style="display: flex; flex-wrap: wrap;">
+		<%project.files.forEach(function(file){ %>
+			<div class="col-6 col-12-small">
+				<div class="thumbnail">
+					<img src="/uploads/project/<%=file%>" style="width:100%">
+				</div>
+			</div>
+		<% }); %>
+	</div>
+
+		
+		
+		<form method="post" action="#" enctype="multipart/form-data">
+			<div class="row gtr-uniform">
+				<div>
+				<h3>Upload a new File<input type="file" name="myFile"></h3>	
+				</div>
+				<!-- Break -->
+				<div class="col-12">
+					<ul class="actions">
+						<li><input type="submit" value="Add" class="primary" /></li>
+						<!-- <li><input type="reset" value="Reset" /></li> -->
+					</ul>
+				</div>
+			</div>
+		</form>
+		<form method="post" action="/project/final-submission/<%=project._id%>">
+			<div class="col-12">
+				<ul class="actions">
+					<li><input type="submit" value="Final Submission" class="primary" /></li>
+					<!-- <li><input type="reset" value="Reset" /></li> -->
+				</ul>
+			</div>
+		</form>
+	</div>
+</section>
+
+<% include ../partials/footer %>

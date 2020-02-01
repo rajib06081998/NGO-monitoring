@@ -1,6 +1,5 @@
 var mongoose=require("mongoose");
 var fundrequestSchema=new mongoose.Schema({
-	permissionDocument:String,
 	application:String,
 	type:String,
 	Project:{

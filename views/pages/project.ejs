@@ -39,19 +39,46 @@
 				</div>
 			</section>
 		<%}%>
-		<section>
-			<div class="inner">
-				<header class="major">
-					<h1>Actions</h1>
-				</header>
-				<ul class="actions">
-					<li><a href="/project/<%= project._id %>/apply-for-permission" class="button">
-					Apply for permissions</a></li>
-					<li><a href="/project/<%= project._id %>/apply-for-fund" class="button">Apply for fund</a></li>
-					<li><a href="/project/<%= project._id %>/add-proofs-of-completion" class="button">Add proofs of completion</a></li>
-				</ul>
-			</div>
-		</section>
+		<%if(stage==='completed'){%>
+			<section>
+				<div class="inner">
+					<header class="major">
+						<h1>Documents of Project Completion</h1>
+					</header>
+
+						<div class="row text-center" style="display: flex; flex-wrap: wrap;">
+					<%project.files.forEach(function(file){ %>
+						<div class="col-6 col-12-small">
+							<div class="thumbnail">
+								<img src="/uploads/project/<%=file%>" style="width:100%">
+							</div>
+						</div>
+					<% }); %>
+				</div>
+			</section>
+		<%}%>
+		
+		<%if(owner){%>
+			<section>
+				<div class="inner">
+					<header class="major">
+						<h1>Actions</h1>
+					</header>
+					<ul class="actions">
+						<%if(stage!=='permission denied'||stage!='completed'){%>
+							<%if(stage==='Created'){%>
+								<li><a href="/project/<%= project._id %>/apply-for-permission" class="button">
+								Apply for permissions</a></li>
+							<%}if(stage==='permission approved'){%>
+								<li><a href="/project/<%= project._id %>/apply-for-fund" class="button">Apply for fund</a></li>
+							<%}if(stage==='permission approved'||stage==='Applied for fund'||stage==='fund approved'||stage==='fund request denied'){%>
+								<li><a href="/project/proof/<%= project._id %>" class="button">Add proofs of completion</a></li>
+							<%}%>				
+						<%}%>
+					</ul>
+				</div>
+			</section>
+		<%}%>
 		<section>
 			<div class="inner">
 				<header class="major">

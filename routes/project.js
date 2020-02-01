@@ -4,6 +4,7 @@ const Project=require('../models/Project');
 const Log=require('../models/Log')
 const Ngo=require('../models/Ngo');
 const permissionRequest=require('../models/permission_request');
+const fundRequest= require('../models/fund_request');
 const router=express.Router();
 // var upload = multer({ dest: 'public/images/' });
 
@@ -155,7 +156,8 @@ router.get('/:id',(req,res,next)=>{
 								const ob={project,
 								  		  logs,
 								  		  ngos,
-								  		  loggedIn: req.user? true: false
+								  		  loggedIn: req.user? true: false,
+								  		  owner:false
 										}
 								res.render('pages/project.ejs',ob);
 							}
@@ -165,7 +167,12 @@ router.get('/:id',(req,res,next)=>{
 						const ob={
 							project,
 							logs,
-							loggedIn: req.user?true: false
+							loggedIn: req.user?true: false,
+							stage:project.stage,
+							owner:false
+						}
+						if(req.user){
+							ob.owner=(req.user._id.toString()==project.Ngo.toString())? true: false;
 						}
 						res.render('pages/project.ejs',ob);
 					}
@@ -185,7 +192,7 @@ router.post('/:id/edit',(req,res,next)=>{
 	res.redirect('/');
 });
 router.get('/:id/apply-for-permission',(req,res)=>{
-	res.render('pages/apply permission form',{loggedIn: req.user? true: false});
+	res.render('pages/apply permission form',{loggedIn: req.user? true: false,request: "permission"});
 })
 router.post('/:id/apply-for-permission',(req,res,next)=>{
 	const ob={  _id: req.params.id,
@@ -215,14 +222,70 @@ router.post('/:id/apply-for-permission',(req,res,next)=>{
 					permissionRequest.create(permRequest,(err,permRequest)=>{
 						if(err)
 							next(err)
-						upgrade(project,"Applied for permission",(err)=>{
-							if(err)
-								next(err);
-							else{
-								// console.log("lskdj slkddj")
-								res.redirect('/project/'+project._id);
-							}
-						});	
+						else{
+							upgrade(project,"Applied for permission",(err)=>{
+								if(err)
+									next(err);
+								else{
+									// console.log("lskdj slkddj")
+									res.redirect('/project/'+project._id);
+								}
+							});	
+						}
+					})
+					// project.permApplication=req.body.application;
+				}
+			})
+		}
+		else{
+			console.log("not created")
+			res.redirect('/');
+		}
+	});
+});
+
+
+router.get('/:id/apply-for-fund',(req,res)=>{
+	res.render('pages/apply permission form',{loggedIn: req.user? true: false, request: "fund"});
+})
+router.post('/:id/apply-for-fund',(req,res,next)=>{
+	const ob={  _id: req.params.id,
+				Ngo: req.user._id
+			 };
+	Project.findOne(ob,(err,project)=>{
+		if(err){
+			console.log("in err");
+			next(err);
+		}
+		else if(project==null)
+			res.send("no such project/ you don't have the permission");
+		else if(project.stage==="permission approved"){
+			Ngo.findOne({_id: project.Ngo}, "type", (err,ngo)=>{
+				if(err){
+					// console.log('in er');
+					next(err);
+				}
+				else{
+					const fRequest={
+						application: req.body.application,
+						status: 'pending',
+						type: ngo.type,
+						Project: project._id
+					}
+					console.log(fRequest);
+					fundRequest.create(fRequest,(err,fRequest)=>{
+						if(err)
+							next(err)
+						else{
+							upgrade(project,"Applied for fund",(err)=>{
+								if(err)
+									next(err);
+								else{
+									// console.log("lskdj slkddj")
+									res.redirect('/project/'+project._id);
+								}
+							});	
+						}
 					})
 					// project.permApplication=req.body.application;
 				}
@@ -305,6 +368,74 @@ router.post('/assignNgo/:projectId',(req,res,next)=>{
 					})
 				}
 			})
+		}
+	})
+})
+
+router.get('/proof/:id',(req,res,next)=>{
+	Project.findOne({_id:req.params.id},(err,project)=>{
+				if(err) next(err);
+				else
+					{
+						 //project.files.push(req.file.filename);
+						// console.log(req.files);
+						 //project.save((err)=>{
+						 	//if(err)
+						 		//next(err);
+						 //});
+						 res.render("pages/proof.ejs",{loggedIn: req.user? true: false,project});
+						//console.log(project);
+					}
+
+			})
+	
+});
+
+
+
+router.post('/proof/:id',(req,res,next)=>{
+	console.log("hi");
+	upload(req,res,(err)=>{
+		if(err)
+			next(err);
+		else
+		{
+			Project.findOne({_id:req.params.id},(err,project)=>{
+				if(err) next(err);
+				else
+					{
+						 project.files.push(req.file.filename);
+						// console.log(req.files);
+						 project.save((err)=>{
+						 	if(err)
+						 		next(err);
+						 });
+						 res.redirect("/project/proof/"+project._id);
+						console.log(project);
+					}
+
+			})
+		}
+	})
+})
+
+router.post('/final-submission/:id',(req,res,next)=>{
+	Project.findOne({_id:req.params.id},(err,project)=>{
+		if(err)
+			next(err);
+		else{
+			if(project.files.length>0){
+				upgrade(project,'completed',(err)=>{
+					if(err)
+						next(err);
+					else{
+						res.redirect('/project/'+project._id);
+					}
+				})
+			}
+			else{
+				res.redirect('/project/proof/'+project._id);
+			}
 		}
 	})
 })
