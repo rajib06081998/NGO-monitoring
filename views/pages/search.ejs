@@ -8,11 +8,8 @@
 				<img src="images/pic07.jpg" alt="" />
 			</span>
 			<header class="major">
-				<h1>Government Projects</h1>
+				<h1>Search Results</h1>
 			</header>
-			<%if(employee){%>
-				<button onclick="window.location.href='/project/add/gov'" >Add Project</button>
-			<%}%>
 		</div>
 	</section>
 
@@ -26,26 +23,18 @@
 			<div class="table-wrapper">
 				<table>
 					<tbody>
-						<%projects.forEach(function(project){%>
-							<tr onclick="location.href='/project/<%= project._id %>'" class="projectList">
+						<%ngos.forEach(function(ngo){%>
+							<tr onclick="location.href='/project?ngoId=<%=ngo._id%>'" class="projectList">
 								
 									<!-- <header class="major"> -->
-										<td><h3><%= project.title %></h3></td>
+										<td><h3><%= ngo.username %></h3></td>
 									<!-- </header> -->
 							</tr>
 						<% });%>
 					</tbody>
 				</table>
 			</div>
-			<div>
-				<%for(var i=0;i<count;i++){%>
-					<%if(pageno==i+1){%>
-						<a style="background-color: #479b98;font-size: 40px" href="/project/gov?&pageno=<%=i+1%>"><%=i+1%></a>
-					<%}else{%>
-						<a style="font-size: 40px" href="/project/gov?&pageno=<%=i+1%>"><%=i+1%></a>
-					<%}%>
-				<%}%>
-			</div>
+			
 		</div>
 
 		<!-- Three -->

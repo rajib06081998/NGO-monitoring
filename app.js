@@ -20,7 +20,7 @@ app.use(express.static(__dirname + '/public'));
 // seedDB();
 mongoose.set('useNewUrlParser', true);
 mongoose.set('useUnifiedTopology', true);
-mongoose.connect("mongodb://localhost/nitshacks3");
+mongoose.connect("mongodb://localhost/nitshacks");
 app.use(bodyParser.urlencoded({extended:true}));
 
 //Passpot config
@@ -69,18 +69,22 @@ app.get('/',function(req,res){
 //landing page showing ngos based on categories
 app.get('/ngos/:ngoType',function(req,res){
 	console.log(req.user);
-	var ngos=Ngo.find({type:req.params.ngoType},function(err,allngos){
-		if(err){
-			console.log(err);
-		}else{
-			if(allngos.length==0)
-				res.send("no ngos of type "+req.params.ngoType);
-			const ob={ngoType:req.params.ngoType,
-				ngos:allngos,
-				loggedIn: req.user? true: false
+	Ngo.count({type:req.params.ngoType},(err,count)=>{
+		Ngo.find({type:req.params.ngoType},null,{limit: 10,skip:((req.query.pageno-1)*10),sort:{score:-1}},function(err,allngos){
+			if(err){
+				console.log(err);
+			}else{
+				if(allngos.length==0)
+					res.send("no ngos of type "+req.params.ngoType);
+				const ob={ngoType:req.params.ngoType,
+					ngos:allngos,
+					loggedIn: req.user? true: false,
+					count:Math.ceil(count/10),
+					pageno:req.query.pageno
+				}
+				res.render('ngos_based_on_type',ob);
 			}
-			res.render('ngos_based_on_type',ob);
-		}
+		});
 	});
 })
 
@@ -95,6 +99,7 @@ app.post('/ngos/add',function(req,res){
 		email: req.body.email,
 		type:req.body.ngoType,
 		description: req.body.description,
+		score:0,
 		usertype: 'ngo'
 	});
 	Ngo.register(ngo,req.body.password,function(err,ngo){
@@ -123,7 +128,7 @@ app.post("/employee/signup",function(req,res){
 			res.redirect("/employee/signup");
 		}
 		passport.authenticate("user")(req,res,function(){
-			res.redirect("/employee/ppr");
+			res.redirect("/employee/ppr?pageno=1");
 		});
 	});
 });
@@ -138,7 +143,7 @@ app.get("/login/user",function(req,res){
 app.post("/login/user",passport.authenticate("user",{
 	failureRedirect: "/login/user"
 }),function(req,res){
-	res.redirect("/employee/ppr");
+	res.redirect("/employee/ppr?pageno=1");
 });
 
 //ngo login
@@ -152,6 +157,15 @@ app.post("/login/ngo",passport.authenticate("ngo",{
 	res.redirect('/project?ngoId='+req.user._id);
 });
 
+//Search ngos
+app.post('/search/ngo',function(req,res){
+	console.log(req.body.search);
+	Ngo.find({username: new RegExp(req.body.search, "i")},function(err,ngos){
+		const count=ngos.length;
+		const pageno=1;
+		res.render('pages/search',{ngos,loggedIn:false});
+	})
+})
 app.use('/employee/',employeeRoutes);
 app.use('/project/',projectRoutes);
 
@@ -160,6 +174,15 @@ app.get("/logout",function(req,res){
 	// req.flash("success","Logged you Out");
 	res.redirect("/");
 });
+app.post('/updateScore',function(req,res){
+	Ngo.findOne({_id:req.query.id},function(err,ngo){
+		ngo.score+=parseInt(req.body.review);
+		ngo.save((err)=>{
+			res.redirect('/');
+		})
+		
+	})
+})
 app.listen(4000,function(){
 	console.log("Server has been Started");
 })

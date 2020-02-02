@@ -6,6 +6,7 @@ var permissionrequestSchema=new mongoose.Schema({
 			type:mongoose.Schema.Types.ObjectId,
 			ref: "Project"
 	},
+	score:Number,
 	status:String
 });
 module.exports=mongoose.model("permissionRequest",permissionrequestSchema);

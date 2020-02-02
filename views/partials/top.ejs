@@ -23,6 +23,9 @@
 					<header id="header" class="alt style1">
 						<a href="/" class="logo"><strong>NGO</strong> <span>Monitor</span></a>
 						<nav>
+							<form action="/search/ngo" method='post'>
+								<input type="text" name="search" placeholder="Search NGOs"  style="border:2px solid white;color:white; ">
+							</form>
 							<a href="#menu">Menu</a>
 						</nav>
 					</header>
@@ -31,7 +34,7 @@
 					<nav id="menu">
 						<ul class="links">
 							<li><a href="/">Home</a></li>
-							<li><a href="/project/gov">Government Projects</a></li>
+							<li><a href="/project/gov?pageno=1">Government Projects</a></li>
 						</ul>
 						<ul class="actions stacked">
 								<%if(!loggedIn){%>

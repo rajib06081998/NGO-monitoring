@@ -39,32 +39,42 @@ const upload = multer({
 router.get('/',(req,res,next)=>{
 	// ngoId is the userId btw
 	const ngoId= req.query.ngoId;
-	Project.find({Ngo: ngoId},null,{limit: 10},(err,projects)=>{
-		if(projects.length==0)
-			console.log("empty");
+	Project.count({Ngo: ngoId},(err,count)=>{
 		if(err)
 			next(err);
 		else{
-			Ngo.findOne({_id: ngoId},(err,ngo)=>{
+			Project.find({Ngo: ngoId},null,{limit: 10,skip:((req.query.pageno-1)*10)},(err,projects)=>{
+				if(projects.length==0)
+					console.log("empty");
 				if(err)
 					next(err);
 				else{
-					const ob={
-						ngo,
-						projects,
-						loggedIn: false,
-						owner: false
-					}
-					if(req.user){
-						ob.loggedIn=true;
-						ob.owner=(req.user._id.toString()==ngo._id.toString())? true: false;
-					}
-					console.log(ob.owner);
-					res.render('pages/projects.ejs',ob);
+					Ngo.findOne({_id: ngoId},(err,ngo)=>{
+						if(err)
+							next(err);
+						else{
+							const ob={
+								ngo,
+								projects,
+								loggedIn: false,
+								owner: false,
+								count:Math.ceil(count/10),
+								pageno:req.query.pageno
+							}
+							console.log(ob.count);
+							if(req.user){
+								ob.loggedIn=true;
+								ob.owner=(req.user._id.toString()==ngo._id.toString())? true: false;
+							}
+							// console.log(ob.owner);
+							res.render('pages/projects.ejs',ob);
+						}
+					});
 				}
 			});
 		}
-	});
+
+	})
 	
 });
 router.get('/add',(req,res,next)=>{
@@ -116,7 +126,7 @@ router.get('/gov',(req,res,next)=>{
 	}else{
 		 ob={isGovt: true};
 	}
-	Project.find(ob,null,{limit: 100},(err,projects)=>{
+	Project.find(ob,null,{limit: 10,skip:(req.query.pageno-1)*10},(err,projects)=>{
 		if(projects.length==0)
 			console.log("empty");
 		if(err)
@@ -131,7 +141,15 @@ router.get('/gov',(req,res,next)=>{
 				obj.employee=(req.user.usertype==='employee')? true: false;
 			}
 		}
-			res.render('pages/govt projects.ejs',obj);
+		Project.count(ob,(err,count)=>{
+						if(err)
+							next(err);
+						else{
+							obj.count=Math.ceil(count/10);
+							obj.pageno=req.query.pageno;
+							res.render('pages/govt projects.ejs',obj);						}
+					})
+			
 	});
 });
 	
@@ -149,7 +167,7 @@ router.get('/:id',(req,res,next)=>{
 					next(err);
 				else{
 					if(project.isGovt && project.Ngo== null){
-						Ngo.find({type: project.type},"username",(err,ngos)=>{
+						Ngo.find({type: project.type},"username",{sort:{score:-1}},(err,ngos)=>{
 							if(err)
 								next(err);
 							else{
@@ -157,6 +175,7 @@ router.get('/:id',(req,res,next)=>{
 								  		  logs,
 								  		  ngos,
 								  		  loggedIn: req.user? true: false,
+								  		  stage: '',
 								  		  owner:false
 										}
 								res.render('pages/project.ejs',ob);
@@ -425,11 +444,17 @@ router.post('/final-submission/:id',(req,res,next)=>{
 			next(err);
 		else{
 			if(project.files.length>0){
+
 				upgrade(project,'completed',(err)=>{
 					if(err)
 						next(err);
 					else{
-						res.redirect('/project/'+project._id);
+						Ngo.findOne({_id:project.Ngo},(err,ngo)=>{
+							ngo.score+=1;
+							ngo.save((err)=>{
+								res.redirect('/project/'+project._id);
+							})
+						})
 					}
 				})
 			}

@@ -13,7 +13,7 @@
 				</div>
 				<!-- show documents -->
 				<%if(status==='pending') { %>
-					<div>
+					<div class="inner">
 						<button onclick="window.location.href='/employee/<%=req_id%>/approve-permission?projectId=<%=projectId%>'" class="btn btn-success">Approve</button>
 						<button onclick="window.location.href='/employee/<%=req_id%>/deny?request=permission'" class="btn btn-danger">Deny</button>
 					</div>

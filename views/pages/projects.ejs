@@ -23,30 +23,34 @@
 
 <!-- Main -->
 	<div id="main">
-
+		<div class="inner">
 		<!-- Two -->
-		
-		<section id="two" class="spotlights">
-			<%projects.forEach(function(project){%>
-				<section>
-					<a href="/project/<%= project._id %>" class="image">
-						<img src="/uploads/project/<%= project.image%>" alt="" data-position="center center" />
-					</a>
-					<div class="content">
-						<div class="inner">
-							<header class="major">
-								<h3><%= project.title %></h3>
-							</header>
-							<p><%= project.description %></p>
-							<ul class="actions">
-								<li><a href="/project/<%= project._id %>" class="button">Learn more</a></li>
-							</ul>
-						</div>
-					</div>
-				</section>
-			<% });%>
-		</section>
-
+			<h1>Projects</h1>
+			<hr>
+			<div class="table-wrapper">
+				<table>
+					<tbody>
+						<%projects.forEach(function(project){%>
+							<tr onclick="location.href='/project/<%= project._id %>'" class="projectList">
+								
+									<!-- <header class="major"> -->
+										<td><h3><%= project.title %></h3></td>
+									<!-- </header> -->
+							</tr>
+						<% });%>
+					</tbody>
+				</table>
+			</div>
+			<div>
+				<%for(var i=0;i<count;i++){%>
+					<%if(pageno==i+1){%>
+						<a style="background-color: #479b98;font-size: 40px" href="/project?ngoId=<%= ngo._id %>&pageno=<%=i+1%>"><%=i+1%></a>
+					<%}else{%>
+						<a style="font-size: 40px" href="/project?ngoId=<%= ngo._id %>&pageno=<%=i+1%>"><%=i+1%></a>
+					<%}%>
+				<%}%>
+			</div>
+		</div>
 		<!-- Three -->
 
 	</div>

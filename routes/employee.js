@@ -32,8 +32,9 @@ const upload = multer({
  }).single('document');
 
 router.get("/ppr",function(req,res,next){
+	const filter={type:req.user.type,status:'pending'};
 	if(req.user.usertype==='employee'){
-		permissionRequest.find({type:req.user.type,status:'pending'},function(err,pendingpermissionRequests){
+		permissionRequest.find(filter,null,{limit:10,skip:(req.query.pageno-1)*10,sort:{score:-1}},function(err,pendingpermissionRequests){
 			console.log(pendingpermissionRequests);
 			quiteRepetetive(err,pendingpermissionRequests,function(requests,err){
 				if(err){
@@ -47,7 +48,16 @@ router.get("/ppr",function(req,res,next){
 							requestType:'ppr',
 							loggedIn: req.user? true: false
 						}
-					res.render('pages/employee_dashboard',ob);
+					permissionRequest.count(filter,(err,count)=>{
+						if(err)
+							next(err);
+						else{
+							ob.count=Math.ceil(count/10);
+							ob.pageno=req.query.pageno;
+							res.render('pages/employee_dashboard',ob);
+						}
+					})
+					
 				}
 			})
 			
@@ -57,8 +67,9 @@ router.get("/ppr",function(req,res,next){
 	}
 });
 router.get("/apr",function(req,res){
+	const filter={type:req.user.type,status:'approved'};
 	if(req.user.usertype==='employee'){
-		permissionRequest.find({type:req.user.type,status:'approved'},function(err,approvedpermissionRequests){
+		permissionRequest.find(filter,null,{limit:10,skip:(req.query.pageno-1)*10,sort:{score:-1}},function(err,approvedpermissionRequests){
 			quiteRepetetive(err,approvedpermissionRequests,function(requests,err){
 				if(err)
 					next(err);
@@ -68,7 +79,15 @@ router.get("/apr",function(req,res){
 							requestType:'apr',
 							loggedIn: req.user? true: false
 						}
-					res.render('pages/employee_dashboard',ob);
+					permissionRequest.count(filter,(err,count)=>{
+						if(err)
+							next(err);
+						else{
+							ob.count=Math.ceil(count/10);
+							ob.pageno=req.query.pageno;
+							res.render('pages/employee_dashboard',ob);
+						}
+					})
 				}
 			});
 		});
@@ -79,8 +98,9 @@ router.get("/apr",function(req,res){
 
 //fund routes
 router.get("/pfr",function(req,res){
+	const filter={type:req.user.type,status:'pending'};
 	if(req.user.usertype==='employee'){
-		fundRequest.find({type:req.user.type,status:'pending'},function(err,pendingfundRequests){
+		fundRequest.find(filter,null,{limit:10,skip:(req.query.pageno-1)*10,sort:{score:-1}},function(err,pendingfundRequests){
 			quiteRepetetive(err,pendingfundRequests,function(requests,err){
 				if(err)
 					next(err);
@@ -90,7 +110,15 @@ router.get("/pfr",function(req,res){
 							requestType:'pfr',
 							loggedIn: req.user? true: false
 						}
-					res.render('pages/employee_dashboard',ob);
+					fundRequest.count(filter,(err,count)=>{
+						if(err)
+							next(err);
+						else{
+							ob.count=Math.ceil(count/10);
+							ob.pageno=req.query.pageno;
+							res.render('pages/employee_dashboard',ob);
+						}
+					})
 				}
 			})
 		});
@@ -99,8 +127,9 @@ router.get("/pfr",function(req,res){
 	}
 });
 router.get("/afr",function(req,res){
+	const filter={type:req.user.type,status:'approved'};
 	if(req.user.usertype==='employee'){
-		fundRequest.find({type:req.user.type,status:'approved'},function(err,approvedfundRequests){
+		fundRequest.find(filter,null,{limit:10,skip:(req.query.pageno-1)*10,sort:{score:-1}},function(err,approvedfundRequests){
 			quiteRepetetive(err,approvedfundRequests,function(requests,err){
 				if(err)
 					next(err);
@@ -110,7 +139,15 @@ router.get("/afr",function(req,res){
 							requestType:'afr',
 							loggedIn: req.user? true: false
 						}
-					res.render('pages/employee_dashboard',ob);
+					fundRequest.count(filter,(err,count)=>{
+						if(err)
+							next(err);
+						else{
+							ob.count=Math.ceil(count/10);
+							ob.pageno=req.query.pageno;
+							res.render('pages/employee_dashboard',ob);
+						}
+					})
 				}
 			})
 		});
@@ -410,5 +447,13 @@ function quiteRepetetive(err,Requests,func){
 
 	}
 }
+
+// function findCount(ob,filter,Request,func){
+// 	Request.count(filter,(err,count)=>{
+// 		if(err){
+
+// 		}
+// 	})
+// }
 
 module.exports=router;

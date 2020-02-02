@@ -7,7 +7,7 @@ var NgoSchema = new mongoose.Schema({
 	password: String,
 	usertype:String,
 	description:String,
-	score:String,
+	score:Number,
 	projects:[
 		{
 			type:mongoose.Schema.Types.ObjectId,

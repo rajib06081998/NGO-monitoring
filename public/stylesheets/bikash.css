@@ -40,3 +40,41 @@
 	margin-bottom: 15px;
 	text-decoration: none;
 }
+
+.row button{
+	font-size: 0.6rem;
+	margin-bottom: 15px;
+	text-decoration: none;
+}
+
+.buttons{
+	/*background: #222741;*/
+	height:90vh;
+	border-right: 1px solid #cccccc;
+}
+.reqList{
+	height: 90vh;
+	overflow-y: scroll;
+}
+.reqInList{
+	border-top: 1px solid #dddddd;
+	height: 50px;
+	overflow-y: hidden; 
+}
+
+.reqInList :hover{
+	color: #87ceeb;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.reqList::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE and Edge */
+.reqList {
+  -ms-overflow-style: none;
+}
+.projectList :hover{
+	background-color: #479b98;
+}
